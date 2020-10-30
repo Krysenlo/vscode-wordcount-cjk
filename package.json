@@ -3,7 +3,7 @@
   "displayName": "Word Count CJK",
   "description": "A word count extension that supports CJK languages.",
   "version": "1.4.1",
-  "publisher": "holmescn",
+  "publisher": "krysenlo",
   "license": "SEE LICENSE IN LICENSE",
   "keywords": [
     "word",
@@ -12,14 +12,14 @@
     "cjk"
   ],
   "preview": false,
-  "homepage": "https://github.com/holmescn/vscode-wordcount-cjk/blob/master/README.md",
+  "homepage": "https://github.com/krysenlo/vscode-wordcount-cjk/blob/master/README.md",
   "bugs": {
-    "url": "https://github.com/holmescn/vscode-wordcount-cjk/issues",
-    "email": "holmesconan@gmail.com"
+    "url": "https://github.com/krysenlo/vscode-wordcount-cjk/issues",
+    "email": "krysl@sina.cn"
   },
   "repository": {
     "type": "git",
-    "url": "https://github.com/holmescn/vscode-wordcount-cjk.git"
+    "url": "https://github.com/krysenlo/vscode-wordcount-cjk.git"
   },
   "engines": {
     "vscode": "^1.50.0"
