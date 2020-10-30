@@ -62,6 +62,7 @@ export class WordCountController {
         // create a combined disposable from both event subscriptions
         this._disposable = Disposable.from(...subscriptions);
         this.alignMapCal();
+        this.update();
     }
 
     private getConfig(configuration: WorkspaceConfiguration) {
@@ -69,11 +70,20 @@ export class WordCountController {
             "statusBarTextTemplate",
             "共 ${cjk} 字"
         );
-        this._statusBarTooltipTemplate = configuration
-            .get<string>(
-                "statusBarTooltipTemplate",
-                "中文字数：\\l${cjk}\\ap\\n非 ASCII 字符数：\\l${total - ascii}\\ap\\n英文单词数：\\l${en_words}\\ap\\n非空白字符数：\\l${total - whitespace}\\ap\\n总字符数：\\l\\h${total}\\ap"
-            )
+        let tooltipCfg: string[] | string = configuration.get<Array<string>>(
+            "statusBarTooltipTemplate",
+            [
+                "中文字数：\\l${cjk}\\ap",
+                "非 ASCII 字符数：\\l${total - ascii}\\ap",
+                "英文单词数：\\l${en_words}\\ap",
+                "非空白字符数：\\l${total - whitespace}\\ap",
+                "总字符数：\\l\\h${total}\\ap",
+            ]
+        );
+        if (Array.isArray(tooltipCfg)) {
+            tooltipCfg = tooltipCfg.join("\n");
+        }
+        this._statusBarTooltipTemplate = tooltipCfg
             .replace(/\\n/g, "\n")
             .replace(/\\t/g, "\t");
         this._activateLanguages = configuration.get<Array<string>>(

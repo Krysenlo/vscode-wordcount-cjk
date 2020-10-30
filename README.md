@@ -1,5 +1,36 @@
 # vscode-wordcount-cjk
 
+> **This is just a fork of [Word Count CJK](https://marketplace.visualstudio.com/items?itemName=holmescn.vscode-wordcount-cjk)**  
+> Just for test "publish it to the VS Code Extension Marketplace"
+> and for my own use.
+> 
+> add some features:
+> 1. use string array in configure of `wordcount_cjk.statusBarTooltipTemplate`: 
+> ```
+> "wordcount_cjk.statusBarTooltipTemplate": [
+>   "Line 1",
+>   "Line 2",
+>   "Line 3",
+> ],
+> ```
+> 2. Add some escaped-text for `wordcount_cjk.statusBarTooltipTemplate`
+>   because Text-alignment in tooltip on windows is wrong  
+>   This fix is **ONLY for Windows** with default system font is `Microsoft Yahei UI`
+>    - `\\ap`: alignment point. Use this to split line, Make sure that each piece is the same length.
+>    - `\\l`: loose. Spaces of variable length. Use with `\\ap` to achieve left/right alignment;
+>       ```
+>       "wordcount_cjk.statusBarTooltipTemplate": [
+>         "|左对齐AA\\l|\\ap|左对齐AA\\l|",
+>         "|\\l右对齐BBB|\\ap|\\l右对齐BBB|",
+>         "|左对齐C\\l|\\ap|左对齐C\\l|",
+>         "|\\l右对齐D|\\ap|\\l右对齐D|",
+>         "|左对齐EEE\\l|\\ap|左对齐EEE\\l|"
+>       ],
+>       ```
+>       will show like this:   
+>       ![a](doc/img/Tooltip-alignment.png)
+
+
 This is a more powerful word count extension for VSCode, which supports the CJK character counting.
 
 ## Features
