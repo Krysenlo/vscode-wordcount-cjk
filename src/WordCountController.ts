@@ -77,7 +77,7 @@ export class WordCountController {
                 "非 ASCII 字符数：\\l${total - ascii}\\ap",
                 "英文单词数：\\l${en_words}\\ap",
                 "非空白字符数：\\l${total - whitespace}\\ap",
-                "总字符数：\\l\\h${total}\\ap",
+                "总字符数：\\l${total}\\ap",
             ]
         );
         if (Array.isArray(tooltipCfg)) {

@@ -1,4 +1,48 @@
-import { WorkspaceConfiguration } from "vscode";
+import { WorkspaceConfiguration, workspace } from "vscode";
+const EN_SPACE = "\u0020";
+const CN_SPACE = "\u3000";
+const CR = "\r";
+const LF = "\n";
+const TAB = "\t";
+
+export function countRawWords(value: string) {
+    value = value.replace(/\.\.\./g, "a");
+
+    value = value.trim();
+
+    if (!value) {
+        return 0;
+    }
+
+    // 空白字符
+    const connectWords: string[] = [EN_SPACE, CN_SPACE, CR, LF, TAB, "—", "-", "\u00A0"];
+
+    let count = 1;
+    const initialCode = value.charCodeAt(0);
+    let inWord = (initialCode >= 33 && initialCode <= 126) || initialCode === 167;
+    for (let i = 1; i < value.length; i++) {
+        const charCode = value.charCodeAt(i);
+        const isChar = (charCode >= 33 && charCode <= 126) || charCode === 167;
+        if (inWord && isChar) {
+            continue;
+        }
+        const isConnectWord = connectWords.indexOf(value[i]) >= 0;
+        if (isConnectWord) {
+            inWord = false;
+            continue;
+        }
+        count++;
+        inWord = isChar;
+    }
+
+    return count;
+}
+
+interface CustomRegexVar {
+    name: string;
+    regex: string;
+    regexFlags?: string;
+}
 
 /**
  * The main class to provide counter functionality.
@@ -18,17 +62,92 @@ export class WordCounter {
     /** 格式化函数 */
     private _replaceFuncs: { [key: string]: Function }
 
-    private readonly _regexWordChar: RegExp;
-    private readonly _regexASCIIChar: RegExp;
-    private readonly _regexWhitespaceChar: RegExp;
+    private _regexWordChar!: RegExp;
+    private _regexASCIIChar!: RegExp;
+    private _regexWhitespaceChar!: RegExp;
+    private _customVarsNames!: string[];
+    private _customVarsRegexMap!: Map<string, RegExp>;
+    private _customVarsNumMap!: Map<string, number>;
     private readonly _regexFormatReplace: RegExp;
 
     constructor(configuration: WorkspaceConfiguration) {
-        this._regexWordChar = new RegExp(configuration.get<string>("regexWordChar", "\\w"));
-        this._regexASCIIChar = new RegExp(configuration.get<string>("regexASCIIChar","[\\u0000-\\u00FF]"));
-        this._regexWhitespaceChar = new RegExp(configuration.get<string>("regexWhitespaceChar", "\\s"));
         this._regexFormatReplace = /\$\{([^}]+)\}/g;
         this._replaceFuncs = {};
+        this.getConfig(configuration)
+        workspace.onDidChangeConfiguration((e) => {
+            if (e.affectsConfiguration("wordcount_cjk")) {
+                console.log("wordcount_cjk changed");
+                const configuration = workspace.getConfiguration(
+                    "wordcount_cjk"
+                );
+                this.getConfig(configuration);
+                // this.update(true);
+            }
+        }, this);
+    }
+    private getConfig(configuration: WorkspaceConfiguration) {
+        this._regexWordChar = new RegExp(configuration.get<string>("regexWordChar", "\\w"));
+        this._regexASCIIChar = new RegExp(configuration.get<string>("regexASCIIChar", "[\\u0000-\\u00FF]"));
+        this._regexWhitespaceChar = new RegExp(configuration.get<string>("regexWhitespaceChar", "\\s"));
+        this._customVarsNames = [];
+        this._customVarsRegexMap = new Map<string, RegExp>();
+        this._customVarsNumMap = new Map<string, number>();
+        configuration.get<CustomRegexVar[]>("customVars", [
+            {
+                "name": "中文字数",
+                "regex": "[\\u4E00-\\u9FA5\\uF900-\\uFA2D]"
+            },
+            {
+                "name": "英文单词数",
+                "regex": "[a-zA-Z_]+"
+            },
+            {
+                "name": "ascii",
+                "regex": "[\\u0000-\\u00FF]"
+            },
+            {
+                "name": "空白",
+                "regex": "\\s"
+            },
+            {
+                "name": "常用标点符号",
+                "regex": "[，。；“”‘’：,.;\"']"
+            },
+            {
+                "name": "非中文非ASCII",
+                "regex": "[^\\u0000-\\u00FF\\u4E00-\\u9FA5\\uF900-\\uFA2D]"
+            },
+            {
+                "name": "空行",
+                "regex": "\\n(?=\\r?\\n)"
+            }
+        ]).forEach((customRegexVar) => {
+            const name = customRegexVar.name;
+            let flag;
+            if (customRegexVar.regexFlags === undefined) {
+                flag = 'g';
+            } else {
+                flag = customRegexVar.regexFlags;
+                if (customRegexVar.regexFlags.match('g') === null) {
+                    flag += 'g';
+                }
+            }
+            this._customVarsNames.push(name)
+            this._customVarsRegexMap.set(name, new RegExp(customRegexVar.regex, flag));
+            this._customVarsNumMap.set(name, 0);
+        });
+    }
+
+    private _customVarsCount(text: string, varName: string) {
+        let num = 0;
+        const regexp = this._customVarsRegexMap.get(varName);
+        if (regexp === undefined)
+            return;
+        let result;
+        while ((result = regexp.exec(text)) !== null) {
+            num++;
+        }
+        this._customVarsNumMap.set(varName, num);
     }
 
     public count(text: string) {
@@ -47,9 +166,16 @@ export class WordCounter {
         this._countEnglishWord(' ', inWord);
 
         this._nTotalChars = text.length;
+        this._customVarsRegexMap.forEach((regexp, key) => {
+            this._customVarsCount(text, key);
+        });
+        for (const item of this._customVarsNumMap) {
+            console.log(`${item[0]}: ${item[1]}`);
+        }
+        console.log(countRawWords(text));
     }
 
-    public format(fmt: string) : string {
+    public format(fmt: string): string {
         const _this = this;
         const cjk = this._nChineseChars;
         const ascii = this._nASCIIChars;
@@ -63,17 +189,26 @@ export class WordCounter {
             }
 
             const f = _this._replaceFuncs[matches];
-            return f(cjk, ascii, whitespace, en_words, total);
+            const customVars = new Array();
+            for (const item of this._customVarsNumMap) {
+                customVars.push(item[1]);
+            }
+            return f(cjk, ascii, whitespace, en_words, total, ...customVars);
         });
     }
 
     private _compileExpiession(expr: string) {
-        const f = new Function('cjk', 'ascii', 'whitespace', 'en_words', 'total', `return ${expr};`);
+        // this._customVarsNumMap;
+        const f = new Function('cjk', 'ascii', 'whitespace', 'en_words', 'total', ...this._customVarsNames, `return ${expr};`);
 
         try {
-            f(0, 0, 0, 0, 0);
+            const customVars = new Array();
+            for (const item of this._customVarsNames) {
+                customVars.push(0);
+            }
+            f(0, 0, 0, 0, 0, ...customVars);
         } catch (e) {
-            return new Function('cjk', 'ascii', 'whitespace', 'en_words', 'total', `return '无效表达式: ${expr}';`);
+            return new Function('cjk', 'ascii', 'whitespace', 'en_words', 'total', ...this._customVarsNames, `return '无效表达式: ${expr}';`);
         }
 
         return f;
@@ -135,7 +270,7 @@ export class WordCounter {
      *
      * @param ch Char to be tested
      */
-    private _countEnglishWord(ch: string, inWord: boolean) : boolean {
+    private _countEnglishWord(ch: string, inWord: boolean): boolean {
         if (this._regexWordChar.test(ch)) {
             return true;
         } else {

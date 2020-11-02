@@ -2,14 +2,17 @@
   "name": "vscode-wordcount-cjk",
   "displayName": "Word Count CJK",
   "description": "A word count extension that supports CJK languages.",
-  "version": "1.4.1",
+  "version": "1.5.1",
   "publisher": "krysenlo",
   "license": "SEE LICENSE IN LICENSE",
+  "icon": "images/icon.png",
   "keywords": [
     "word",
     "count",
     "chinese",
-    "cjk"
+    "cjk",
+    "字数",
+    "统计"
   ],
   "preview": false,
   "homepage": "https://github.com/krysenlo/vscode-wordcount-cjk/blob/master/README.md",
@@ -68,9 +71,43 @@
             "非 ASCII 字符数：\\l${total - ascii}\\ap",
             "英文单词数：\\l${en_words}\\ap",
             "非空白字符数：\\l${total - whitespace}\\ap",
-            "总字符数：\\l\\h${total}\\ap"
+            "总字符数：\\l${total}\\ap"
           ],
           "description": "Customize the status bar tooltip."
+        },
+        "wordcount_cjk.customVars": {
+          "type": "array",
+          "default": [
+            {
+              "name": "中文字数",
+              "regex": "[\\u4E00-\\u9FA5\\uF900-\\uFA2D]"
+            },
+            {
+              "name": "英文单词数",
+              "regex": "[a-zA-Z_]+"
+            },
+            {
+              "name": "ascii",
+              "regex": "[\\u0000-\\u00FF]"
+            },
+            {
+              "name": "空白",
+              "regex": "\\s"
+            },
+            {
+              "name": "常用标点符号",
+              "regex": "[，。；“”‘’：,.;\"']"
+            },
+            {
+              "name": "非中文非ASCII",
+              "regex": "[^\\u0000-\\u00FF\\u4E00-\\u9FA5\\uF900-\\uFA2D]"
+            },
+            {
+              "name": "空行",
+              "regex": "\\n(?=\\r?\\n)"
+            }
+          ],
+          "description": "自定义字符串模版参数, 使用正则表达式匹配"
         },
         "wordcount_cjk.regexWordChar": {
           "type": "string",

@@ -1,11 +1,10 @@
 # vscode-wordcount-cjk
 
-> **This is just a fork of [Word Count CJK](https://marketplace.visualstudio.com/items?itemName=holmescn.vscode-wordcount-cjk)**  
-> Just for test "publish it to the VS Code Extension Marketplace"
-> and for my own use.
+> **注意：本插件基于张鹏程编写的[Word Count CJK](https://marketplace.visualstudio.com/items?itemName=holmescn.vscode-wordcount-cjk)**
+> 发布于此，仅用于测试‘VSCode插件市场的发布功能’及个人私用。
 > 
-> add some features:
-> 1. use string array in configure of `wordcount_cjk.statusBarTooltipTemplate`: 
+> 添加了一些功能：
+> 1. 使用字符串数组来配置`wordcount_cjk.statusBarTooltipTemplate`:
 > ```
 > "wordcount_cjk.statusBarTooltipTemplate": [
 >   "Line 1",
@@ -13,11 +12,11 @@
 >   "Line 3",
 > ],
 > ```
-> 2. Add some escaped-text for `wordcount_cjk.statusBarTooltipTemplate`
->   because Text-alignment in tooltip on windows is wrong  
->   This fix is **ONLY for Windows** with default system font is `Microsoft Yahei UI`
->    - `\\ap`: alignment point. Use this to split line, Make sure that each piece is the same length.
->    - `\\l`: loose. Spaces of variable length. Use with `\\ap` to achieve left/right alignment;
+> 2. 为`wordcount_cjk.statusBarTooltipTemplate`添加了一些对齐辅助用的转义符号
+>   因为之前的版本在windows上显示时没法对齐，TAB对齐没有效果
+>   这个对齐功能**仅在以微软雅黑为系统默认字体的Windows系统**上有效，(Mac上用的别的字体，而且用TAB对齐没有问题)
+>    - `\\ap`: 对齐点。 使用对齐点来切分行，每一行对应的对齐点是对齐的。
+>    - `\\l`: 变长空当。与上面的`\\ap`配合使用，可以实现左/右对齐功能。使用效果如下：
 >       ```
 >       "wordcount_cjk.statusBarTooltipTemplate": [
 >         "|左对齐AA\\l|\\ap|左对齐AA\\l|",
@@ -27,92 +26,115 @@
 >         "|左对齐EEE\\l|\\ap|左对齐EEE\\l|"
 >       ],
 >       ```
->       will show like this:   
+>       上面的配置将显示为如下内容:   
 >       ![a](doc/img/Tooltip-alignment.png)
+> 3. 添加了自定义变量，用于 `wordcount_cjk.statusBarTextTemplate` 和 `wordcount_cjk.statusBarTooltipTemplate` 中的字符串模版，可以使用正则表达式来匹配。
+>  ```
+>  "wordcount_cjk.customVars": [
+>    {
+>      "name": "中文字数",
+>      "regex": "[\\u4E00-\\u9FA5\\uF900-\\uFA2D]"
+>    },
+>    {
+>      "name": "英文单词数",
+>      "regex": "[a-zA-Z_]+"
+>    },
+>    {
+>      "name": "ascii",
+>      "regex": "[\\u0000-\\u00FF]"
+>    },
+>    {
+>      "name": "空白",
+>      "regex": "\\s"
+>    },
+>    {
+>      "name": "常用标点符号",
+>      "regex": "[，。；“”‘’：,.;\"']"
+>    },
+>    {
+>      "name": "非中文非ASCII",
+>      "regex": "[^\\u0000-\\u00FF\\u4E00-\\u9FA5\\uF900-\\uFA2D]"
+>    },
+>    {
+>      "name": "空行",
+>      "regex": "\\n(?=\\r?\\n)"
+>    }
+>  ]
+>  ```
 
-
-This is a more powerful word count extension for VSCode, which supports the CJK character counting.
+VSCode 的 word count 都是老外写的，没有一个能统计中文字数的，所以我就写了一个。
 
 ## Features
 
-In current version, the following things are counted:
+在这个版本里，统计了：
 
-1. Total characters in a document.
-2. Non-whitespace characters.
-3. English words.
-4. Non-ASCII characters.
-5. CJK characters.
+1. 总字符数.
+2. 非空白字符数.
+3. 英语单词数.
+4. 非 ASCII 码字符数.
+5. CJK 字符数.
 
-In current version, the following format is supported:
+如果你不输入日语和韩语，可以把 CJK 字符数当成中文字符数。
 
-1. Markdown file.
-2. Plain text file.
+支持如下类型文件中的统计：
 
-For other files that are not supported, such as ReStructuredText, a command `Word Count` is offered. The command only calculate once. For keep tracking the word count, you can use the `Word Count Activate` command, and the `Word Count Deactivate` to stop tracking.
+1. Markdown 文件.
+2. 纯文本文件.
 
-A status bar item is added, and full statistics are added as a tooltip of the status bar item.
+对于其它类型的文件，比如 ReStructuredText，如果也想统计一下，我还提供了一个 `Word Count` 命令。不过，这个命令只会计数一次。如果想一直跟踪文档字数的变化，可以使用 `Word Count Activate`。要关闭计数功能，可以使用 `Word Count Deactivate` 命令。
 
-In current version, all CJK characters are counted as Chinese characters. Since I have little knowledge of
-Japanese and Korean, I don't know how to count them. If someone knows, please
-tell me in an issue.
+统计结果会显示在状态栏，把鼠标悬停在状态栏上，可以看到完整的统计结果。在当然的版本中，CJK 字符是混在一起计算的。
+因为我不懂日语和韩语，不知道他们应该怎么统计。如果有哪位朋友有这个需求，并且知道要怎么统计的，请在 issue 区留言
+告诉我，谢谢赐教！
 
 ## Extension Settings
 
-* `wordcount_cjk.statusBarTextTemplate`: Customize the status bar item text.
-* `wordcount_cjk.statusBarTooltipTemplate`: Customize the status bar item tooltip.
-* `wordcount_cjk.regexWordChar`: The regular expression used to test if a char is a word char.
-* `wordcount_cjk.regexASCIIChar`: The regular expression used to test if a char is a ASCII char.
-* `wordcount_cjk.regexWhitespaceChar`: The regular expression used to test if a char is a whitespace.
-* `wordcount_cjk.activateLanguages`: The languages that activate the extension.
+* `wordcount_cjk.statusBarTextTemplate`: 定制状态栏文本.
+* `wordcount_cjk.statusBarTooltipTemplate`: 定制状态栏提示.
+* `wordcount_cjk.regexWordChar`: 用来判断一个字符是否为英语单词字符的正则表达式.
+* `wordcount_cjk.regexASCIIChar`: 用来判断一个字符是否为 ASCII 码字符的正则表达式.
+* `wordcount_cjk.regexWhitespaceChar`: 用来判断一个字符是否为空白字符的正则表达式.
+* `wordcount_cjk.activateLanguages`: 设置哪些类型的文件会显示字数统计。
 
-in `wordcount_cjk.statusBarTextTemplate` and `wordcount_cjk.statusBarTooltipTemplate`, the following placeholder could be used:
+在 `wordcount_cjk.statusBarTextTemplate` 和 `wordcount_cjk.statusBarTooltipTemplate`, 可以使用下面这些占位符:
 
-1. `cjk`: The number of CJK characters.
-2. `ascii`: The number of ASCII characters.
-3. `whitespace`: The number of whitespace characters.
-4. `en_words`: The number of english words.
-5. `total`: The total number of characters.
+1. `cjk`: CJK 字符数.
+2. `ascii`: ASCII 码字符数.
+3. `whitespace`: 空白字符数.
+4. `en_words`: 英语单词数.
+5. `total`: 总字符数.
 
-Since version 1.1, calculation could be done in format string, so one can do this: `${total - cjk} chars`. The expression should
-be a valid JavaScript expresion.
+从 1.1 版开始，格式化字符串可以进行计算了，比如：`共 ${total - ascii} 字`, 其中的表达式，必须是一个有效的 JavaScript 表达式。
 
-### Word char
+### 英语单词字符
 
-In default settings, word char is tested by regular expression `\w`, which is equivalent to `[A-Za-z0-9_]`.
+就是能够构成一个单词的字符。默认使用 `\w` 来检测，也就是 `[A-Za-z0-9_]`。这是正则表达式的默认值。
 
-### ASCII char
+### ASCII 字符
 
-In default settings, word char is tested by regular expression `[\u0000-\u00FF]`, which contains:
+在默认设置中, 使用了正则表达式 `[\u0000-\u00FF]` 来检测, 这包含了两个字符集:
 
 1. `0000-007F`: C0 Controls and Basic Latin (ASCII)
 2. `0080-00FF`: C1 Controls and Latin-1 Supplement (Extended ASCII)
 
-Perhaps someone want to limit the counter with basic ASCII, then config the `wordcount_cjk.regexASCIIChar` to
-`[\u0000-\u007F]`.
+### 空白字符
 
-### Whitespace char
+默认使用正则表达式的 `\s` 来检测，也就是:
+`[ \f\n\r\t\v\u00a0\u1680\u180e\u2000-\u200a\u2028\u2029\u202f\u205f\u3000\ufeff]`. 也就是不只包含了 ASCII 码中的空白字符, 还包含了 Unicode 中的空白字符.
 
-In default settings, word char is tested by regular expression `\s`, which is equivalent to
-`[ \f\n\r\t\v\u00a0\u1680\u180e\u2000-\u200a\u2028\u2029\u202f\u205f\u3000\ufeff]`. That means
-unicode whitespace is also counted. If you don't what that, change the regular expression
-`wordcount_cjk.regexWhitespaceChar`.
+### CJK 字符
 
-### CJK char
+**NOTE**: 这个现在是不可配置的。
 
-**NOTE**: This is not configurable.
-
-The built-in regular expression is `[\u4E00-\u9FA5\uF900-\uFA2D]`, which contains:
+内建的正则表达式为 `[\u4E00-\u9FA5\uF900-\uFA2D]`, 包含了:
 
 * 4E00-9FFF: CJK Unified Ideographs
 * F900-FAFF: CJK Compatibility Ideographs
 
-if someone other than Chinese use this extension, I will try to seperate the Chinese,
-Japanese and Korean characters counters. For now, they are mixed.
+如果有需求的话，以后可能会把 CJK 三个字符集分开。
 
 ## TODO
 
-1. None
-
-If you have any requested feature, open an issue!
+1. 无
 
 **Enjoy!**
