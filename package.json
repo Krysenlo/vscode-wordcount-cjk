@@ -2,7 +2,7 @@
   "name": "vscode-wordcount-cjk",
   "displayName": "Word Count CJK",
   "description": "A word count extension that supports CJK languages.",
-  "version": "1.6.1",
+  "version": "1.6.2",
   "publisher": "krysenlo",
   "license": "SEE LICENSE IN LICENSE",
   "icon": "images/icon.png",
