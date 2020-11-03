@@ -7,6 +7,7 @@ import {
     WorkspaceConfiguration,
     workspace,
 } from "vscode";
+import { DebugOutput } from "./debugOutput";
 import pixelWidth from "./string-pixel-width";
 import { WordCounter } from "./WordCounter";
 
@@ -17,6 +18,7 @@ function fontWidth(str: string): number {
  * The controller of word count
  */
 export class WordCountController {
+    private debug?: DebugOutput;
     private _wordCounter: WordCounter;
     private _statusBarItem: StatusBarItem;
     private _disposable: Disposable;
@@ -28,7 +30,8 @@ export class WordCountController {
 
     constructor(
         configuration: WorkspaceConfiguration,
-        wordCounter: WordCounter
+        wordCounter: WordCounter,
+        debug?: DebugOutput
     ) {
         this._isActive = false;
         this._wordCounter = wordCounter;
@@ -36,28 +39,50 @@ export class WordCountController {
         this._statusBarItem = window.createStatusBarItem(
             StatusBarAlignment.Left
         );
+        this.debug = debug;
 
         // subscribe to selection change and editor activation events
         let subscriptions: Disposable[] = [];
         window.onDidChangeTextEditorSelection(
-            this._onEvent,
+            (e) => {
+                if (this._activateLanguages.findIndex((str) => {
+                    return str === e.textEditor.document.languageId
+                }) !== -1) {
+                    this.debug?.appendLine(`📨onDidChangeTextEditorSelection ${e.textEditor.document.fileName}`);
+                    this._onEvent();
+                }
+            },
             this,
             subscriptions
         );
-        window.onDidChangeActiveTextEditor(this._onEvent, this, subscriptions);
-        workspace.onDidChangeConfiguration((e) => {
-            if (e.affectsConfiguration("wordcount_cjk")) {
-                console.log("wordcount_cjk changed");
-                const configuration = workspace.getConfiguration(
-                    "wordcount_cjk"
-                );
-                this.getConfig(configuration);
-                console.log(
-                    `1 this._statusBarTextTemplate = ${this._statusBarTextTemplate}`
-                );
-                this.update(true);
-            }
-        }, this);
+        window.onDidChangeActiveTextEditor(
+            (e) => {
+                if (e === undefined)
+                    return;
+                if (this._activateLanguages.findIndex((str) => {
+                    return str === e.document.languageId
+                }) !== -1) {
+                    this.debug?.appendLine(`📨onDidChangeTextEditorSelection ${e.document.fileName}`);
+                    this._onEvent();
+                }
+            },
+            this,
+            subscriptions
+        );
+        workspace.onDidChangeConfiguration(
+            (e) => {
+                if (e.affectsConfiguration("wordcount_cjk")) {
+                    this.debug?.appendLine(`📨onDidChangeConfiguration`);
+                    const configuration = workspace.getConfiguration(
+                        "wordcount_cjk"
+                    );
+                    this.getConfig(configuration);
+                    this.update(true);
+                }
+            },
+            this,
+            subscriptions
+        );
 
         // create a combined disposable from both event subscriptions
         this._disposable = Disposable.from(...subscriptions);

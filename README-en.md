@@ -62,6 +62,8 @@
 >    }
 >  ]
 >  ```
+> 4. Add debug mode configuration `"wordcount_cjk.debug": true,`. If you enable it, you will see all the results calculated from `wordcount_cjk.customVars` in the "Output" panel.
+> 
 
 
 This is a more powerful word count extension for VSCode, which supports the CJK character counting.

@@ -1,5 +1,7 @@
 # vscode-wordcount-cjk
 
+[English Version](./README-en.md)
+
 > **注意：本插件基于张鹏程编写的[Word Count CJK](https://marketplace.visualstudio.com/items?itemName=holmescn.vscode-wordcount-cjk)**
 > 发布于此，仅用于测试‘VSCode插件市场的发布功能’及个人私用。
 > 
@@ -61,6 +63,8 @@
 >    }
 >  ]
 >  ```
+> 4. 添加调试模式配置`"wordcount_cjk.debug": true,`，启用后可以在“输出”的“wordcount_cjk”子项中，看到所有自定义变量的计算结果。
+> 
 
 VSCode 的 word count 都是老外写的，没有一个能统计中文字数的，所以我就写了一个。
 

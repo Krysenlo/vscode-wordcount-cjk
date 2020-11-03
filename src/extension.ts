@@ -4,13 +4,15 @@
 import * as vscode from 'vscode';
 import { WordCounter } from './WordCounter';
 import { WordCountController } from './WordCountController';
+import { DebugOutput } from './debugOutput';
 
 // this method is called when your extension is activated
 // your extension is activated the very first time the command is executed
 export function activate(context: vscode.ExtensionContext) {
     const configuration = vscode.workspace.getConfiguration("wordcount_cjk");
-    let counter = new WordCounter(configuration);
-    let controller = new WordCountController(configuration, counter);
+    const debug = new DebugOutput(context);
+    let counter = new WordCounter(configuration, debug);
+    let controller = new WordCountController(configuration, counter, debug);
     let command1 = vscode.commands.registerCommand('extension.wordcount', () => {
         // This command is used to activate the extension when
         // edit non-standard type files.
@@ -30,6 +32,7 @@ export function activate(context: vscode.ExtensionContext) {
     context.subscriptions.push(command2);
     context.subscriptions.push(command3);
     context.subscriptions.push(controller);
+    context.subscriptions.push(debug);
 }
 
 // this method is called when your extension is deactivated
